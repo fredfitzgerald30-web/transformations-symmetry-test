@@ -1,0 +1,754 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Transformations Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one study column; graph-paper header mark + session tally; five modes as tabs; grids drawn in SVG with preimage in ink and image in the worksheet's purple */
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --sunk:#F5F7F9; --ink:#17202A; --muted:#5B6672; --line:#D5DBE2;
+  --accent:#2257C9; --accent-soft:#E2EAFA; --accent-ink:#FFFFFF;
+  --img:#6D3FC0; --img-soft:#ECE4FA; --grid:#E3E8EE; --axis:#7D8794; --mirror:#D9480F;
+  --good:#22713A; --good-soft:#E1F1E5; --bad:#B42318; --bad-soft:#FBE4E1;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1318; --surface:#171D24; --sunk:#12171D; --ink:#E5E9EE; --muted:#9AA4B0; --line:#2A3440;
+  --accent:#86A8F5; --accent-soft:#1B2740; --accent-ink:#0B1222;
+  --img:#B497F2; --img-soft:#2A2140; --grid:#222B35; --axis:#6E7A88; --mirror:#F08A55;
+  --good:#63C27A; --good-soft:#163222; --bad:#F2776C; --bad-soft:#3D1C1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1318; --surface:#171D24; --sunk:#12171D; --ink:#E5E9EE; --muted:#9AA4B0; --line:#2A3440;
+  --accent:#86A8F5; --accent-soft:#1B2740; --accent-ink:#0B1222;
+  --img:#B497F2; --img-soft:#2A2140; --grid:#222B35; --axis:#6E7A88; --mirror:#F08A55;
+  --good:#63C27A; --good-soft:#163222; --bad:#F2776C; --bad-soft:#3D1C1A; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-block:28px 18px}
+.head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.brand{display:flex;gap:14px;align-items:center;min-width:0}
+.brand svg{flex:none;width:50px;height:50px}
+.eyebrow{margin:0;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:2px 0 0;font-family:var(--display);font-weight:800;letter-spacing:-.025em;font-size:clamp(28px,6vw,38px);line-height:1.05}
+.tally{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right}
+.tally b{display:block;font-size:26px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+nav.tabs{display:flex;gap:4px;padding:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+nav.tabs button{flex:1 0 auto;border:0;background:transparent;color:var(--muted);font:600 15px var(--body);padding:10px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+main{padding-block:16px 48px;display:grid;gap:14px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px clamp(16px,4vw,28px);display:grid;gap:14px;min-width:0}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0}
+.prompt{margin:0;font-size:clamp(19px,3.4vw,23px);line-height:1.4;font-weight:600;text-wrap:pretty}
+.pts{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--mono);font-size:16px;font-variant-numeric:tabular-nums}
+.pts span{white-space:nowrap}
+.pts .im{color:var(--img);font-weight:600}
+.rule-big{font-family:var(--mono);font-size:clamp(17px,3.2vw,21px);font-weight:600}
+.inputs{display:grid;gap:8px}
+.inrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center}
+.inrow label{font-family:var(--mono);font-weight:700;color:var(--img);min-width:2.6em}
+.inrow .fix{grid-column:2;font-size:14px;font-weight:700;color:var(--bad);font-family:var(--mono)}
+input[type=text]{width:100%;font:inherit;font-family:var(--mono);color:var(--ink);background:var(--sunk);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input.ok{border-color:var(--good);background:var(--good-soft)} input.no{border-color:var(--bad);background:var(--bad-soft)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 15px var(--body);padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;color:var(--muted);padding-inline:8px}
+.btn[disabled]{opacity:.45;cursor:default}
+button:focus-visible,.chip:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.kbd{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tip{font-size:14px;color:var(--muted);margin:0}
+
+.mc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:460px){.mc{grid-template-columns:minmax(0,1fr)}}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--sunk);color:var(--ink);font:600 16px var(--body);padding:12px 14px;border-radius:10px;cursor:pointer;min-width:0}
+.opt span:last-child{min-width:0;overflow-wrap:anywhere}
+.opt.mono span:last-child{font-family:var(--mono)}
+.opt:hover:not([disabled]){border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font:600 12px var(--mono);color:var(--muted);border:1px solid var(--line);background:var(--surface)}
+.opt.ok{border-color:var(--good);background:var(--good-soft)} .opt.no{border-color:var(--bad);background:var(--bad-soft)} .opt.dim{opacity:.55}
+.opt[disabled]{cursor:default}
+
+.fb{border-radius:10px;padding:12px 14px;display:grid;gap:6px}
+.fb.ok{background:var(--good-soft)} .fb.no{background:var(--bad-soft)} .fb.info{background:var(--accent-soft)}
+.fb strong{font-size:15px}
+.fb.ok strong{color:var(--good)} .fb.no strong{color:var(--bad)} .fb.info strong{color:var(--accent)}
+.fb p{margin:0}
+.work{font-family:var(--mono);font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+
+.gridbox{background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;place-items:center}
+.gridbox svg{width:100%;max-width:440px;height:auto;display:block;touch-action:manipulation}
+.gridbox svg.click{cursor:crosshair}
+svg .gl{stroke:var(--grid);stroke-width:.04}
+svg .ax{stroke:var(--axis);stroke-width:.07}
+svg .tn{fill:var(--muted);font-size:.5px;font-family:var(--mono)}
+svg .pre{fill:none;stroke:var(--ink);stroke-width:.1;stroke-linejoin:round}
+svg .preD{fill:var(--ink)}
+svg .img{fill:var(--img-soft);fill-opacity:.55;stroke:var(--img);stroke-width:.1;stroke-linejoin:round}
+svg .imgD{fill:var(--img)}
+svg .ans{fill:none;stroke:var(--good);stroke-width:.08;stroke-dasharray:.25 .18}
+svg .mirror{stroke:var(--mirror);stroke-width:.07;stroke-dasharray:.35 .2}
+svg .lab{font-size:.62px;font-weight:700;font-family:var(--body)}
+svg .lab.p{fill:var(--ink)} svg .lab.i{fill:var(--img)}
+svg .ghost{fill:var(--img);opacity:.35}
+svg .okD{fill:var(--good)} svg .noD{fill:var(--bad)}
+svg .ctr{fill:var(--mirror)}
+svg .mlab{fill:var(--mirror);font-size:.55px;font-weight:700;font-family:var(--mono)}
+.placed{display:flex;flex-wrap:wrap;gap:6px}
+.placed span{font-family:var(--mono);font-size:14px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--sunk)}
+.placed span.next{border-color:var(--img);color:var(--img);font-weight:700}
+
+.symbox{background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;place-items:center}
+.symbox svg{width:100%;max-width:220px;height:auto}
+.symbox .shp{fill:var(--img-soft);stroke:var(--img);stroke-width:.45;stroke-linejoin:round}
+details.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+details.sheet summary{cursor:pointer;padding:14px 18px;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details.sheet summary::-webkit-details-marker{display:none}
+details.sheet summary::after{content:"Show";font-family:var(--mono);font-size:12px;color:var(--accent)}
+details.sheet[open] summary::after{content:"Hide"}
+.sheet-body{border-top:1px solid var(--line);padding:4px clamp(14px,3vw,22px) 10px}
+.rl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:11px 0;border-top:1px solid var(--line);align-items:baseline}
+.rl:first-child{border-top:0}
+.rl b{font-size:15px}
+.rl code{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--img);white-space:nowrap}
+.rl p{grid-column:1/-1;margin:0;font-size:14px;color:var(--muted)}
+@media (max-width:440px){.rl{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:pop .18s ease-out}@keyframes pop{from{transform:translateY(3px);opacity:.4}to{transform:none;opacity:1}}}
+</style>
+
+<header class="top">
+  <div class="wrap head">
+    <div class="brand">
+      <svg viewBox="0 0 50 50" aria-hidden="true">
+        <rect x="1" y="1" width="48" height="48" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+        <path d="M9 10v30M17 10v30M33 10v30M41 10v30M9 10h32M9 18h32M9 26h32M9 34h32" stroke="var(--grid)" stroke-width="1"/>
+        <line x1="25" y1="6" x2="25" y2="44" stroke="var(--mirror)" stroke-width="1.6" stroke-dasharray="3 2"/>
+        <polygon points="9,34 21,30 17,14" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+        <polygon points="41,34 29,30 33,14" fill="var(--img-soft)" stroke="var(--img)" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <p class="eyebrow">Geometry · Transformations, dilations &amp; symmetry</p>
+        <h1>Transformations Lab</h1>
+      </div>
+    </div>
+    <div class="tally"><b id="tally">0 / 0</b>correct this session</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Study modes">
+    <button role="tab" id="tab-mc" data-tab="mc" aria-selected="true">Multiple choice</button>
+    <button role="tab" id="tab-find" data-tab="find" aria-selected="false">Find the image</button>
+    <button role="tab" id="tab-graph" data-tab="graph" aria-selected="false">Graph it</button>
+    <button role="tab" id="tab-name" data-tab="name" aria-selected="false">Name it</button>
+    <button role="tab" id="tab-sym" data-tab="sym" aria-selected="false">Symmetry</button>
+    <button role="tab" id="tab-rules" data-tab="rules" aria-selected="false">Rules</button>
+  </nav>
+</div>
+
+<main class="wrap">
+  <details class="sheet"><summary>My notes</summary><div class="sheet-body" id="sheet-body"></div></details>
+
+  <section id="pane-mc" role="tabpanel" aria-labelledby="tab-mc">
+    <div class="bar"><div class="chips" id="mc-filter"></div><span class="count" id="mc-count"></span></div>
+    <div id="mc-card"></div>
+  </section>
+  <section id="pane-find" role="tabpanel" aria-labelledby="tab-find" hidden>
+    <div class="bar"><div class="chips" id="find-filter"></div><span class="count" id="find-count"></span></div>
+    <div id="find-card"></div>
+  </section>
+  <section id="pane-graph" role="tabpanel" aria-labelledby="tab-graph" hidden>
+    <div class="bar"><div class="chips" id="graph-filter"></div><span class="count" id="graph-count"></span></div>
+    <div id="graph-card"></div>
+  </section>
+  <section id="pane-name" role="tabpanel" aria-labelledby="tab-name" hidden>
+    <div class="bar"><div class="chips" id="name-filter"></div><span class="count" id="name-count"></span></div>
+    <div id="name-card"></div>
+  </section>
+  <section id="pane-sym" role="tabpanel" aria-labelledby="tab-sym" hidden>
+    <details class="sheet" open style="margin-bottom:14px"><summary>Symmetry definitions</summary><div class="sheet-body" id="sym-defs"></div></details>
+    <div class="bar"><div class="chips" id="sym-filter"></div><span class="count" id="sym-count"></span></div>
+    <div id="sym-card"></div>
+  </section>
+  <section id="pane-rules" role="tabpanel" aria-labelledby="tab-rules" hidden>
+    <div class="bar"><span class="count" id="rules-count"></span></div>
+    <div id="rules-card"></div>
+  </section>
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const nz=(a,b)=>{let v;do{v=ri(a,b);}while(v===0);return v;};
+const store={get(k,d){try{const v=localStorage.getItem('xform:'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('xform:'+k,JSON.stringify(v));}catch(e){}}};
+const N=n=>n<0?'−'+Math.abs(n):String(n);              // pretty number
+const P=p=>`(${N(p[0])}, ${N(p[1])})`;                         // pretty point
+const V=(a,b)=>`⟨${N(a)}, ${N(b)}⟩`;                // pretty vector
+const PN=n=>n<0?`(${N(n)})`:N(n);                               // number in parentheses if negative
+const same=(p,q)=>p[0]===q[0]&&p[1]===q[1];
+function parseNum(v){ const s=String(v).replace(/[−–]/g,'-').replace(/\s+/g,'').replace(/^k=/i,''); let m=s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/); if(m) return +m[1]/+m[2]; m=s.match(/^-?\d*\.?\d+$/); return m?+s:null; }
+function parsePt(s){ const m=String(s).replace(/[−–]/g,'-').match(/-?\d+(\.\d+)?/g); return m&&m.length===2?m.map(Number):null; }
+let tally={right:0,total:0};
+function score(ok){ tally.total++; if(ok) tally.right++; $('#tally').textContent=tally.right+' / '+tally.total; }
+
+/* ---------- transformations ---------- */
+const KINDS={
+  tr:{name:'Translation'}, rx:{name:'x-axis'}, ry:{name:'y-axis'}, yx:{name:'y = x'}, nyx:{name:'y = −x'}, xh:{name:'x = h'}, yk:{name:'y = k'}, ro:{name:'Rotation (origin)'}, rp:{name:'Rotation (point)'}, dl:{name:'Dilation'}, cp:{name:'Composition'}
+};
+function makeT(kind){
+  const t={kind};
+  if(kind==='tr'){ t.a=nz(-5,5); t.b=Math.random()<.15?0:nz(-5,5); t.words=Math.random()<.35; }
+  if(kind==='xh') t.h=nz(-4,4);
+  if(kind==='yk') t.k=nz(-4,4);
+  if(kind==='ro'||kind==='rp'){ t.deg=pick([90,90,180,270]); t.dir=pick(['cw','ccw']);
+    if(kind==='ro') t.c=[0,0]; else { do{ t.c=[ri(-3,3),ri(-3,3)]; }while(t.c[0]===0&&t.c[1]===0); } }
+  if(kind==='dl'){ const [n,d]=pick([[2,1],[3,1],[1,2],[1,3],[2,3],[3,4],[3,2],[5,2],[7,2],[5,4]]); t.sn=n; t.sd=d; }
+  if(kind==='cp'){ const ks=['tr','rx','ry','yx','nyx','xh','yk','ro']; const k1=pick(ks); let k2; do{ k2=pick(ks); }while(k2===k1); t.f=makeT(k1); t.s=makeT(k2); t.f.words=false; t.s.words=false; }
+  return t;
+}
+const FR=t=>t.sd===1?String(t.sn):`${t.sn}/${t.sd}`;
+const kval=t=>t.sn/t.sd;
+const r2=v=>Math.round(v*100)/100;
+const effCCW=t=>(t.dir==='ccw'||t.deg===180)?t.deg:(360-t.deg)%360;
+function rotO(e,p){ const [x,y]=p; return e===90?[-y,x]:e===180?[-x,-y]:[y,-x]; }
+const ORULE={90:'(x, y) → (−y, x)',180:'(x, y) → (−x, −y)',270:'(x, y) → (y, −x)'};
+const isRot=t=>t.kind==='ro'||t.kind==='rp';
+const cat=t=>t.kind==='tr'?'tr':t.kind==='dl'?'dl':t.kind==='cp'?'cp':isRot(t)?'rot':'ref';
+function ctrText(t){ return (t.c[0]===0&&t.c[1]===0)?'the origin':`the point ${P(t.c)}`; }
+function apply(t,p){ const [x,y]=p;
+  if(isRot(t)){ const r=rotO(effCCW(t),[x-t.c[0],y-t.c[1]]); return [r[0]+t.c[0],r[1]+t.c[1]]; }
+  if(t.kind==='dl') return [r2(x*t.sn/t.sd),r2(y*t.sn/t.sd)];
+  if(t.kind==='cp') return apply(t.s,apply(t.f,p));
+  switch(t.kind){
+    case 'tr': return [x+t.a,y+t.b];
+    case 'rx': return [x,-y];
+    case 'ry': return [-x,y];
+    case 'yx': return [y,x];
+    case 'nyx': return [-y,-x];
+    case 'xh': return [2*t.h-x,y];
+    case 'yk': return [x,2*t.k-y];
+  }
+}
+function moveWords(a,b){ const parts=[]; if(a) parts.push(`${Math.abs(a)} unit${Math.abs(a)===1?'':'s'} ${a<0?'left':'right'}`); if(b) parts.push(`${Math.abs(b)} unit${Math.abs(b)===1?'':'s'} ${b<0?'down':'up'}`); return parts.join(' and ')||'0 units'; }
+function describe(t){
+  switch(t.kind){
+    case 'tr': return t.words?`translation ${moveWords(t.a,t.b)}`:`translation ${V(t.a,t.b)}`;
+    case 'rx': return 'reflection across the x-axis';
+    case 'ry': return 'reflection across the y-axis';
+    case 'yx': return 'reflection across y = x';
+    case 'nyx': return 'reflection across y = −x';
+    case 'xh': return `reflection across x = ${N(t.h)}`;
+    case 'yk': return `reflection across y = ${N(t.k)}`;
+    case 'ro': case 'rp': return `rotation ${t.deg}°${t.deg===180?'':' '+(t.dir==='cw'?'clockwise':'counterclockwise')} about ${ctrText(t)}`;
+    case 'dl': return `dilation by a scale factor of ${FR(t)} (center at the origin)`;
+    case 'cp': return `${describe(t.f)}, followed by a ${describe(t.s)}`;
+  }
+}
+const sg=(v,n)=>n===0?v:`${v} ${n<0?'−':'+'} ${Math.abs(n)}`;
+function ruleOf(t,generic){
+  switch(t.kind){
+    case 'tr': return generic?'(x, y) → (x + a, y + b)':`(x, y) → (${sg('x',t.a)}, ${sg('y',t.b)})`;
+    case 'rx': return '(x, y) → (x, −y)';
+    case 'ry': return '(x, y) → (−x, y)';
+    case 'yx': return '(x, y) → (y, x)';
+    case 'nyx': return '(x, y) → (−y, −x)';
+    case 'xh': return generic?'(x, y) → (2h − x, y)':`(x, y) → (2(${N(t.h)}) − x, y)`;
+    case 'yk': return generic?'(x, y) → (x, 2k − y)':`(x, y) → (x, 2(${N(t.k)}) − y)`;
+    case 'ro': case 'rp': return ORULE[effCCW(t)];
+    case 'dl': return generic?'(x, y) → (kx, ky)':`(x, y) → (${FR(t)}x, ${FR(t)}y)`;
+    case 'cp': return 'do the first, then the second';
+  }
+}
+function work(t,p,lab){
+  const [x,y]=p, q=apply(t,p), L=lab?esc(lab):'', L2=lab?esc(lab)+'′':'';
+  switch(t.kind){
+    case 'tr': return `${L}${P(p)} → (${N(x)} + ${PN(t.a)}, ${N(y)} + ${PN(t.b)}) = ${L2}${P(q)}`;
+    case 'xh': return `${L}${P(p)} → (2(${N(t.h)}) − ${PN(x)}, ${N(y)}) = ${L2}${P(q)}`;
+    case 'yk': return `${L}${P(p)} → (${N(x)}, 2(${N(t.k)}) − ${PN(y)}) = ${L2}${P(q)}`;
+    case 'dl': return `${L}${P(p)} → (${FR(t)} · ${PN(x)}, ${FR(t)} · ${PN(y)}) = ${L2}${P(q)}`;
+    case 'cp': { const m=apply(t.f,p); return `${L}${P(p)} → first: ${P(m)} → then: ${L2}${P(q)}`; }
+    case 'rp': { const rel=[x-t.c[0],y-t.c[1]], r=rotO(effCCW(t),rel); if(t.c[0]===0&&t.c[1]===0) return `${L}${P(p)} → ${L2}${P(q)}`;
+      return `${L}${P(p)}: subtract ${P(t.c)} → ${P(rel)}, rotate → ${P(r)}, add ${P(t.c)} back → ${L2}${P(q)}`; }
+    default: return `${L}${P(p)} → ${L2}${P(q)}`;
+  }
+}
+function ruleLine(t){ if(t.kind==='dl') return `Multiply both coordinates by k = ${FR(t)}: (x, y) → (kx, ky). k ${kval(t)>1?'> 1, so it is an enlargement (gets bigger)':'< 1, so it is a reduction (gets smaller)'}.`;
+  if(t.kind==='cp') return `Do the ${describe(t.f)} first. Then do the ${describe(t.s)} on that result. Order matters.`;
+  if(isRot(t)){ const e=effCCW(t), note=t.deg===270?` (${t.deg}° ${t.dir==='cw'?'clockwise':'counterclockwise'} is the same as 90° ${t.dir==='cw'?'counterclockwise':'clockwise'})`:'';
+    if(t.c[0]===0&&t.c[1]===0) return `Rule: ${ORULE[e]}${note}`;
+    return `About ${P(t.c)}: subtract the center, use ${ORULE[e]}, then add the center back${note}.`; }
+  return t.kind==='tr'&&t.words?`${moveWords(t.a,t.b)} = ${V(t.a,t.b)}, so ${ruleOf(t)}`:`Rule: ${t.kind==='xh'||t.kind==='yk'?ruleOf(t,true)+', with '+(t.kind==='xh'?'h = '+N(t.h):'k = '+N(t.k)):ruleOf(t)}`; }
+function wrongImages(t,p){ // images from common mistakes
+  const [x,y]=p, out=[];
+  if(t.kind==='dl'){ const k=kval(t); out.push([r2(x/k),r2(y/k)],[r2(x*k),y],[x,r2(y*k)],[r2(x+k),r2(y+k)],[r2(-x*k),r2(-y*k)]); return out; }
+  if(t.kind==='cp'){ out.push(apply(t.f,apply(t.s,p)),apply(t.f,p),apply(t.s,p)); return out; }
+  if(t.kind==='tr') out.push([x-t.a,y-t.b],[x+t.a,y-t.b],[x-t.a,y+t.b],[x+t.b,y+t.a]);
+  else if(isRot(t)){ const e=effCCW(t), c=t.c, rel=[x-c[0],y-c[1]];
+    [90,180,270].filter(a=>a!==e).forEach(a=>{ const r=rotO(a,rel); out.push([r[0]+c[0],r[1]+c[1]]); });
+    if(c[0]||c[1]){ out.push(rotO(e,p), rotO(e,rel)); const r=rotO(e,rel); out.push([r[0]-c[0],r[1]-c[1]]); }
+    out.push([x,-y],[-x,y],[-y,-x]); }
+  else{
+    out.push([x,-y],[-x,y],[y,x],[-y,-x],[-x,-y]);
+    if(t.kind==='xh') out.push([x,2*t.h-y],[t.h-x,y],[2*t.h+x,y]);
+    if(t.kind==='yk') out.push([2*t.k-x,y],[x,t.k-y],[x,2*t.k+y]);
+  }
+  return out;
+}
+function kindsFor(f){ return {all:Object.keys(KINDS), tr:['tr'], ref:['rx','ry','yx','nyx','xh','yk'], line:['xh','yk'], rot:['ro','ro','rp'], rp:['rp'], dl:['dl'], cp:['cp']}[f]; }
+const LETTERS=['ABCD','JKLM','PQRS','WXYZ','DEFG','LMNO','RSTU','EFGH'];
+function makeShape(n,lo,hi,t){
+  for(let tries=0;tries<400;tries++){
+    const dm=t.kind==='dl'?Math.max(1,Math.floor(Math.min(7,7*t.sd/t.sn)/t.sd)):0;
+    const pts=[]; while(pts.length<n){ const p=dm?[ri(-dm,dm)*t.sd,ri(-dm,dm)*t.sd]:[ri(lo,hi),ri(lo,hi)]; if(!pts.some(q=>same(p,q))) pts.push(p); }
+    if(n===3){ const [a,b,c]=pts; if((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])===0) continue; }
+    if(n===4){ const cx=pts.reduce((s,p)=>s+p[0],0)/4, cy=pts.reduce((s,p)=>s+p[1],0)/4; pts.sort((p,q)=>Math.atan2(p[1]-cy,p[0]-cx)-Math.atan2(q[1]-cy,q[0]-cx));
+      const area=pts.reduce((s,p,i)=>{ const q=pts[(i+1)%4]; return s+p[0]*q[1]-q[0]*p[1]; },0); if(Math.abs(area)<6) continue; }
+    const img=pts.map(p=>apply(t,p));
+    if(img.every(q=>Math.abs(q[0])<=7&&Math.abs(q[1])<=7) && !img.every((q,i)=>same(q,pts[i]))) return {pts,img,names:pick(LETTERS).split('').slice(0,n)};
+  }
+  return null;
+}
+
+/* ---------- grid drawing ---------- */
+function gridSVG({shapes=[],mirror=null,id='',click=false,extra=''}){
+  const R=8; let g='';
+  for(let i=-R;i<=R;i++){ g+=`<line class="gl" x1="${i}" y1="${-R}" x2="${i}" y2="${R}"/><line class="gl" x1="${-R}" y1="${i}" x2="${R}" y2="${i}"/>`; }
+  g+=`<line class="ax" x1="${-R}" y1="0" x2="${R}" y2="0"/><line class="ax" x1="0" y1="${-R}" x2="0" y2="${R}"/>`;
+  for(let i=-R+2;i<=R-2;i+=2){ if(i===0) continue; g+=`<text class="tn" x="${i}" y="0.62" text-anchor="middle">${N(i)}</text><text class="tn" x="-0.22" y="${-i+0.17}" text-anchor="end">${N(i)}</text>`; }
+  g+=`<text class="tn" x="${R-0.1}" y="-0.25" text-anchor="end">x</text><text class="tn" x="0.25" y="${-R+0.45}">y</text>`;
+  if(mirror){
+    const m=mirror; let l='', lab='';
+    if(m.kind==='rx'){ l=`x1="${-R}" y1="0" x2="${R}" y2="0"`; lab=`<text class="mlab" x="${R-0.15}" y="0.75" text-anchor="end">x-axis</text>`; }
+    if(m.kind==='ry'){ l=`x1="0" y1="${-R}" x2="0" y2="${R}"`; lab=`<text class="mlab" x="0.2" y="${R-0.25}">y-axis</text>`; }
+    if(m.kind==='xh'){ l=`x1="${m.h}" y1="${-R}" x2="${m.h}" y2="${R}"`; lab=`<text class="mlab" x="${m.h+0.2}" y="${-R+0.6}">x = ${N(m.h)}</text>`; }
+    if(m.kind==='yk'){ l=`x1="${-R}" y1="${-m.k}" x2="${R}" y2="${-m.k}"`; lab=`<text class="mlab" x="${-R+0.2}" y="${-m.k-0.25}">y = ${N(m.k)}</text>`; }
+    if(m.kind==='yx'){ l=`x1="${-R}" y1="${R}" x2="${R}" y2="${-R}"`; lab=`<text class="mlab" x="${R-0.3}" y="${-R+1.1}" text-anchor="end">y = x</text>`; }
+    if(m.kind==='nyx'){ l=`x1="${-R}" y1="${-R}" x2="${R}" y2="${R}"`; lab=`<text class="mlab" x="${R-0.3}" y="${R-0.6}" text-anchor="end">y = −x</text>`; }
+    if(m.kind==='dl'){ g+=`<circle class="ctr" cx="0" cy="0" r="0.28"/><text class="mlab" x="0.35" y="0.75">center</text>`; }
+    else if(m.kind==='cp'){}
+    else if(isRot(m)){ g+=`<circle class="ctr" cx="${m.c[0]}" cy="${-m.c[1]}" r="0.28"/><text class="mlab" x="${m.c[0]+0.35}" y="${-m.c[1]+0.75}">center</text>`; }
+    else g+=`<line class="mirror" ${l}/>`+lab;
+  }
+  shapes.forEach(s=>{
+    const pts=s.pts.map(p=>`${p[0]},${-p[1]}`).join(' ');
+    if(s.pts.length>=2) g+=`<polygon class="${s.cls}" points="${pts}"/>`;
+    s.pts.forEach((p,i)=>{ g+=`<circle class="${s.dot||(s.cls==='img'?'imgD':'preD')}" cx="${p[0]}" cy="${-p[1]}" r="0.17"/>`;
+      if(s.names) g+=`<text class="lab ${s.cls==='img'||s.prime?'i':'p'}" x="${p[0]+0.22}" y="${-p[1]-0.24}">${esc(s.names[i])}${s.prime?'′':''}</text>`; });
+  });
+  return `<div class="gridbox"><svg viewBox="${-R-0.5} ${-R-0.5} ${2*R+1} ${2*R+1}" ${id?`id="${id}"`:''} class="${click?'click':''}" role="img" aria-label="Coordinate grid">${g}${extra}</svg></div>`;
+}
+
+/* ---------- rule expression checker (for typed rules) ---------- */
+function compileRule(str){
+  let s=String(str).toLowerCase().replace(/[−–]/g,'-').replace(/\s+/g,'');
+  s=s.replace(/^\(x,y\)(->|→|=>|to)?/,'');
+  if(s.startsWith('(')&&s.endsWith(')')) s=s.slice(1,-1);
+  let depth=0, cut=-1;
+  for(let i=0;i<s.length;i++){ const c=s[i]; if(c==='(') depth++; else if(c===')') depth--; else if(c===','&&depth===0){ if(cut>=0) return null; cut=i; } }
+  if(cut<0) return null;
+  const parts=[s.slice(0,cut),s.slice(cut+1)];
+  try{
+    return parts.map(p=>{
+      if(!p||!/^[0-9xyhkab+\-*().]+$/.test(p)) throw 0;
+      let e=p.replace(/(\d|\))(?=[xyhkab(])/g,'$1*').replace(/([xyhkab])(?=[\d(xyhkab])/g,'$1*').replace(/--/g,'+').replace(/\+-/g,'-').replace(/-\+/g,'-');
+      const f=new Function('x','y','h','k','a','b','"use strict";return ('+e+');'); f(1,2,3,4,5,6); return f;
+    });
+  }catch(e){ return null; }
+}
+function ruleMatches(str, truth){
+  const f=compileRule(str); if(!f) return false;
+  for(let i=0;i<6;i++){ const v=[ri(-9,9),ri(-9,9),ri(-9,9),ri(-9,9),ri(-9,9),ri(-9,9)];
+    const want=truth(...v); if(Math.abs(f[0](...v)-want[0])>1e-9||Math.abs(f[1](...v)-want[1])>1e-9) return false; }
+  return true;
+}
+/* parse a named transformation: a line or a vector */
+function parseNamed(str){
+  const raw=String(str).toLowerCase();
+  const rm=raw.match(/(90|180|270)/);
+  if(rm&&!raw.includes('=')){ const deg=+rm[1]; const ccw=/counter|ccw|anti/.test(raw), cw=!ccw&&/clock|cw/.test(raw);
+    if(deg!==180&&!ccw&&!cw) return null; return {kind:'ro',deg,dir:ccw?'ccw':'cw',c:[0,0]}; }
+  let s=String(str).toLowerCase().replace(/[−–]/g,'-').replace(/\s+/g,'').replace(/^(reflection|reflect)?(across|over)?(the)?(line)?/,'');
+  if(/^x-?axis$/.test(s)||s==='y=0') return {kind:'rx'};
+  if(/^y-?axis$/.test(s)||s==='x=0') return {kind:'ry'};
+  if(s==='y=x') return {kind:'yx'};
+  if(s==='y=-x') return {kind:'nyx'};
+  let m=s.match(/^x=(-?\d+)$/); if(m) return {kind:'xh',h:+m[1]};
+  m=s.match(/^y=(-?\d+)$/); if(m) return {kind:'yk',k:+m[1]};
+  if(!s.includes('=')){ const p=parsePt(s); if(p) return {kind:'tr',a:p[0],b:p[1]}; }
+  return null;
+}
+
+/* ---------- notes sheet ---------- */
+const NOTES=[
+ ['Reflection','= a flip','An isometry in which a figure and its image have opposite orientations.'],
+ ['Translation','= a slide','Every point moves the same distance in the same direction. Orientation stays the same.'],
+ ['Translation by ⟨a, b⟩','(x, y) → (x + a, y + b)','Left and down are negative. 2 left and 3 up = ⟨−2, 3⟩.'],
+ ['Reflection over the x-axis','(x, y) → (x, −y)',''],
+ ['Reflection over the y-axis','(x, y) → (−x, y)',''],
+ ['Reflection over y = x','(x, y) → (y, x)',''],
+ ['Reflection over y = −x','(x, y) → (−y, −x)',''],
+ ['Reflection over vertical line x = h','(x, y) → (2h − x, y)','Example: A(−4, 6) over x = −2: 2(−2) − (−4) = 0, so A′(0, 6).'],
+ ['Reflection over horizontal line y = k','(x, y) → (x, 2k − y)','Example: B(−2, 6) over y = −3: 2(−3) − 6 = −12, so B′(−2, −12). The x stays the same.'],
+ ['Rotation','= a turn','Every point turns the same angle around a center point. Size, shape, and orientation stay the same.'],
+ ['Rotation 90\u00b0 clockwise (origin)','(x, y) \u2192 (y, \u2212x)','Same as 270\u00b0 counterclockwise.'],
+ ['Rotation 90\u00b0 counterclockwise (origin)','(x, y) \u2192 (\u2212y, x)','Same as 270\u00b0 clockwise.'],
+ ['Rotation 180\u00b0 (origin)','(x, y) \u2192 (\u2212x, \u2212y)','Direction doesn\u2019t matter for 180\u00b0. Both ways land in the same spot.'],
+ ['Rotation about a point (a, b)','1. subtract \u2192 2. rotate \u2192 3. add back','Subtract the center from the point, use the origin rule, then add the center back. Example: G(0, \u22123), 90\u00b0 counterclockwise about (3, \u22121): (0 \u2212 3, \u22123 + 1) = (\u22123, \u22122) \u2192 (\u2212y, x) = (2, \u22123) \u2192 (2 + 3, \u22123 \u2212 1) = G\u2032(5, \u22124).'],
+ ['Rotation 180\u00b0 about (a, b)','(x, y) \u2192 (2a \u2212 x, 2b \u2212 y)','A shortcut for 180\u00b0 about any point.'],
+ ['Dilation (center at origin)','(x, y) \u2192 (kx, ky)','Multiply both coordinates by the scale factor k. k > 1 is an enlargement, 0 < k < 1 is a reduction. Same shape, different size, so it is NOT an isometry.'],
+ ['Finding the scale factor','k = image \u00f7 original','Example: P(4, 8) \u2192 P\u2032(5, 10), so k = 5 \u00f7 4 = 1.25.'],
+ ['Composition of transformations','do one, then the next','Apply the first transformation, then apply the second to the image. Order matters.'],
+ ['Line symmetry','a mirror line','A line splits the figure into two matching mirror halves.'],
+ ['Rotational symmetry','order & magnitude','Matches itself after a turn under 360\u00b0. Order = number of matches in a full turn. Magnitude = 360\u00b0 \u00f7 order.'],
+ ['Point symmetry','= 180\u00b0 rotational symmetry','Looks the same upside down. Shapes with an even order have point symmetry.'],
+];
+$('#sheet-body').innerHTML=NOTES.map(([a,b,c])=>`<div class="rl"><b>${esc(a)}</b><code>${esc(b)}</code>${c?`<p>${esc(c)}</p>`:''}</div>`).join('');
+
+/* ---------- generic engine ---------- */
+function makeEngine(id, gen, opts={}){
+  const E={queue:[],cur:null,state:'ask',right:0,total:0,picked:null,typed:[],res:null};
+  const next=re=>{ if(re&&E.cur) E.queue.splice(Math.min(3,E.queue.length),0,{...E.cur,retry:true});
+    if(!E.queue.length){ if(opts.fixed){ E.cur=null; render(); return; } E.queue=gen(); }
+    E.cur=E.queue.shift(); E.state='ask'; E.picked=null; E.typed=[]; E.res=null; render(); };
+  function finish(ok){ E.total++; if(ok) E.right++; score(ok); E.state=ok?'right':'wrong'; E.miss=!ok; render(); }
+  function render(){
+    const q=E.cur, el=$('#'+id+'-card');
+    $('#'+id+'-count').textContent=opts.fixed?`${E.right} / ${E.total} correct · ${E.queue.length+(q?1:0)} left`:`${E.right} / ${E.total} correct`;
+    if(!q){ el.innerHTML=`<div class="card"><p class="label">Deck done</p><p class="prompt">${E.right} of ${E.total} correct, counting retries.</p><div class="row"><button class="btn primary" id="${id}-again">Shuffle and go again</button></div></div>`;
+      $('#'+id+'-again').onclick=()=>{ E.right=0; E.total=0; E.queue=gen(); next(); }; return; }
+    const st=E.state;
+    const fb=st==='ask'?'':`<div class="fb ${st==='right'?'ok':'no'}"><strong>${st==='right'?'Correct.':'Not quite. You’ll get this one again in a few questions.'}</strong>${q.why?`<div class="work">${q.why}</div>`:''}</div>`;
+    let body='';
+    if(q.choices){
+      body=`<div class="mc">${q.choices.map((c,i)=>{ let cls=q.mono?'mono ':''; if(st!=='ask'){ cls+=c===q.answer?'ok':c===E.picked?'no':'dim'; }
+        return `<button class="opt ${cls}" data-i="${i}" ${st!=='ask'?'disabled':''}><span class="k">${i+1}</span><span>${esc(c)}</span></button>`; }).join('')}</div>`;
+    } else {
+      body=`<div class="inputs">${q.inputs.map((inp,i)=>{ const r=E.res?E.res[i]:null;
+        return `<div class="inrow"><label for="${id}-in${i}">${esc(inp.label)}</label><input type="text" id="${id}-in${i}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(inp.ph||'')}" ${st!=='ask'?'readonly':''} value="${esc(E.typed[i]||'')}" class="${r===true?'ok':r===false?'no':''}">${r===false&&inp.show?`<span class="fix">${esc(inp.show)}</span>`:''}</div>`; }).join('')}</div>`;
+    }
+    const actions = st==='ask' ? (q.choices?'<span class="kbd">Press 1–4</span>':`<button class="btn primary" id="${id}-check">Check</button><button class="btn ghost" id="${id}-idk">Show me</button><span class="kbd">Enter</span>`)
+      : `<button class="btn primary" id="${id}-next">Next</button><span class="kbd">Enter</span>`;
+    el.innerHTML=`<div class="card"><p class="label">${esc(q.label)}${q.retry?' · try again':''}</p><div class="prompt">${q.prompt}</div>${q.visual||''}${body}${fb}<div class="row">${actions}</div></div>`;
+    if(q.choices){
+      if(st==='ask') el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ E.picked=q.choices[+b.dataset.i]; finish(E.picked===q.answer); });
+    } else if(st==='ask'){
+      const ins=[...el.querySelectorAll('input[type=text]')];
+      const check=reveal=>{ E.typed=ins.map(i=>i.value);
+        if(!reveal&&E.typed.some(v=>!v.trim())){ ins.find(i=>!i.value.trim()).focus(); return; }
+        E.res=q.inputs.map((inp,i)=>reveal?false:inp.check(E.typed[i])); finish(E.res.every(Boolean)); };
+      ins[0].focus();
+      ins.forEach((inp,i)=>inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(i<ins.length-1&&!ins[i+1].value) ins[i+1].focus(); else check(false); }}));
+      $('#'+id+'-check').onclick=()=>check(false); $('#'+id+'-idk').onclick=()=>check(true);
+    }
+    if(st!=='ask'){ const b=$('#'+id+'-next'); b.onclick=()=>next(E.miss); b.focus(); }
+  }
+  return {start(){ E.right=0; E.total=0; E.queue=gen(); next(); }, key(e){ const q=E.cur; if(q&&q.choices&&E.state==='ask'&&/^[1-4]$/.test(e.key)){ const b=document.querySelector(`#${id}-card .opt[data-i="${+e.key-1}"]`); if(b) b.click(); } }};
+}
+function filterChips(id, opts, keyName, onChange){
+  let cur=store.get(keyName, Object.keys(opts)[0]); if(!opts[cur]) cur=Object.keys(opts)[0];
+  const draw=()=>{ $('#'+id).innerHTML=Object.entries(opts).map(([k,l])=>`<button class="chip" data-k="${k}" aria-pressed="${cur===k}">${l}</button>`).join('');
+    document.querySelectorAll('#'+id+' .chip').forEach(c=>c.onclick=()=>{ cur=c.dataset.k; store.set(keyName,cur); draw(); onChange(); }); };
+  draw(); return ()=>cur;
+}
+const KF={all:'Mixed',tr:'Translations',ref:'Reflections',line:'x = h & y = k',rot:'Rotations',rp:'Rotate about a point',dl:'Dilations',cp:'Compositions'};
+
+/* ---------- MULTIPLE CHOICE ---------- */
+const CONCEPTS=[
+ ['A reflection is a…','flip',['slide','turn','stretch']],
+ ['A translation is a…','slide',['flip','turn','stretch']],
+ ['In a reflection, a figure and its image have…','opposite orientations',['the same orientation','different sizes','different shapes']],
+ ['In a translation, a figure and its image have…','the same orientation',['opposite orientations','different sizes','different shapes']],
+ ['An isometry is a transformation that…','keeps the size and shape the same',['changes the size','changes the shape','only moves a figure up or down']],
+ ['The vector ⟨−2, 3⟩ moves a figure…','2 left and 3 up',['2 right and 3 up','2 left and 3 down','3 left and 2 up']],
+ ['Which vector means 4 units right and 1 unit down?','⟨4, −1⟩',['⟨−4, 1⟩','⟨1, −4⟩','⟨4, 1⟩']],
+ ['A point that is on the line of reflection…','stays in the same place',['moves to the origin','switches its x and y','moves 1 unit away']],
+ ['When you reflect across a vertical line x = h, the y-coordinate…','stays the same',['changes sign','becomes 2h − y','swaps with x']],
+ ['When you reflect across a horizontal line y = k, the x-coordinate…','stays the same',['changes sign','becomes 2k − x','swaps with y']],
+ ['Reflecting across the x-axis is the same as reflecting across…','y = 0',['x = 0','y = x','y = −x']],
+ ['Reflecting across the y-axis is the same as reflecting across…','x = 0',['y = 0','y = x','y = −x']],
+ ['A rotation is a\u2026','turn',['flip','slide','stretch']],
+ ['Rotating 270\u00b0 counterclockwise is the same as rotating\u2026','90\u00b0 clockwise',['90\u00b0 counterclockwise','180\u00b0','270\u00b0 clockwise']],
+ ['Rotating 270\u00b0 clockwise is the same as rotating\u2026','90\u00b0 counterclockwise',['90\u00b0 clockwise','180\u00b0','270\u00b0 counterclockwise']],
+ ['Why doesn\u2019t a 180\u00b0 rotation need a direction?','Clockwise and counterclockwise land in the same place',['It always goes clockwise','It always goes counterclockwise','It doesn\u2019t move the figure']],
+ ['To rotate about a point that isn\u2019t the origin, the first step is to\u2026','subtract the center from each point',['add the center to each point','reflect across the center','use the origin rule and stop']],
+ ['During a rotation, the center of rotation\u2026','stays in the same place',['moves to the origin','turns 90\u00b0','flips across the y-axis']],
+ ['In a rotation, a figure and its image have\u2026','the same orientation',['opposite orientations','different sizes','different shapes']],
+ ['A dilation changes a figure\u2019s\u2026','size, but not its shape',['shape, but not its size','orientation only','position only']],
+ ['A dilation with scale factor k = 3 is a\u2026','enlargement',['reduction','reflection','isometry']],
+ ['A dilation with scale factor k = 2/3 is a\u2026','reduction',['enlargement','rotation','isometry']],
+ ['The rule for a dilation centered at the origin is\u2026','(x, y) \u2192 (kx, ky)',['(x, y) \u2192 (x + k, y + k)','(x, y) \u2192 (x/k, y/k)','(x, y) \u2192 (kx, y)']],
+ ['P(4, 6) maps to P\u2032(6, 9). What is the scale factor?','3/2',['2/3','2','3']],
+ ['Is a dilation an isometry?','No, because the size changes',['Yes, because the shape stays the same','Yes, always','Only when k is negative']],
+ ['A composition of transformations is\u2026','two or more transformations done in a row',['a single reflection','a dilation by 0','a figure with symmetry']],
+ ['In a composition, does the order of the transformations matter?','Yes, it can change the final image',['No, never','Only for translations','Only for dilations']],
+]
+const SYMCON=[
+ ['A figure has line symmetry if\u2026','a line divides it into two mirror-image halves',['it can be turned 180\u00b0','it has 4 equal sides','it is a regular polygon']],
+ ['A figure has rotational symmetry if\u2026','it matches itself after a turn of less than 360\u00b0',['it has a line of symmetry','it matches itself only after 360\u00b0','it has right angles']],
+ ['The order of rotational symmetry is\u2026','how many times the figure matches itself in one full turn',['the number of sides','the smallest turn angle','the number of lines of symmetry']],
+ ['The magnitude of rotational symmetry is\u2026','the smallest angle that maps the figure onto itself',['the number of matches in a full turn','always 360\u00b0','the number of lines of symmetry']],
+ ['How do you find the magnitude?','360\u00b0 \u00f7 order',['order \u00d7 360\u00b0','360\u00b0 \u2212 order','order \u00f7 360\u00b0']],
+ ['A figure has point symmetry if\u2026','it looks the same after a 180\u00b0 rotation',['it looks the same after a 90\u00b0 rotation','it has exactly one line of symmetry','it has a vertex at the origin']],
+ ['Which figures have point symmetry?','Figures with an even order of rotational symmetry',['Figures with an odd order','Every figure with a line of symmetry','Only circles']],
+ ['The point a figure rotates around is called the\u2026','center of symmetry',['line of symmetry','magnitude','vertex']],
+ ['A shape with order 1 has\u2026','no rotational symmetry',['point symmetry','one line of symmetry','rotational symmetry of 360\u00b0 only, which counts']],
+ ['A regular polygon with n sides has\u2026','n lines of symmetry and order n',['1 line of symmetry','order 2','no symmetry']],
+ ['A regular pentagon has a magnitude of\u2026','72\u00b0',['60\u00b0','90\u00b0','108\u00b0']],
+ ['A shape has magnitude 40\u00b0. What is its order?','9',['4','40','8']],
+ ['Does an equilateral triangle have point symmetry?','No, its order is 3, which is odd',['Yes, it has 3 lines','Yes, every regular polygon does','No, it has no symmetry']],
+ ['A parallelogram (not a rectangle or rhombus) has\u2026','point symmetry but no line symmetry',['line symmetry but no point symmetry','both','neither']],
+ ['How many lines of symmetry does a rhombus (not a square) have?','2',['4','1','0']],
+ ['How many lines of symmetry does a circle have?','Infinitely many',['1','2','360']],
+];
+const ALLRULES=['(x, y) → (x, −y)','(x, y) → (−x, y)','(x, y) → (y, x)','(x, y) → (−y, −x)','(x, y) → (2h − x, y)','(x, y) → (x, 2k − y)','(x, y) → (−x, −y)','(x, y) → (x + a, y + b)','(x, y) → (y, −x)','(x, y) → (−y, x)'];
+function mcImage(kinds){
+  const t=makeT(pick(kinds)); let p; do{ p=[nz(-6,6),nz(-6,6)]; }while(same(apply(t,p),p));
+  const right=P(apply(t,p));
+  const q=apply(t,p), wset=new Set(wrongImages(t,p).map(P)); wset.delete(right);
+  while(wset.size<3){ const w=P([q[0]+ri(-2,2),q[1]+ri(-2,2)]); if(w!==right) wset.add(w); }
+  const wrong=[...wset];
+  return {label:'Find the image', prompt:`What is the image of P${esc(P(p))} after a ${esc(describe(t))}?`, choices:shuffle([right,...shuffle(wrong).slice(0,3)]), answer:right, mono:true,
+    why:`${esc(ruleLine(t))}<br>${work(t,p,'P')}`};
+}
+function mcRule(kinds){
+  if(kinds.some(k=>k==='ro'||k==='rp')&&(kinds.every(k=>k==='ro'||k==='rp')||Math.random()<.35)){
+    const opts=[[90,'cw'],[90,'ccw'],[180,'cw'],[270,'cw'],[270,'ccw']]; const [deg,dir]=pick(opts); const t={kind:'ro',deg,dir,c:[0,0]};
+    const right=ORULE[effCCW(t)];
+    return {label:'Rules', prompt:`Which rule is a ${esc(describe(t))}?`, choices:shuffle([right,...shuffle(ALLRULES.filter(r=>r!==right)).slice(0,3)]), answer:right, mono:true,
+      why:t.deg===270?esc(ruleLine(t)):''}; }
+  const k=pick(kinds.filter(x=>x!=='tr').length?kinds.filter(x=>x!=='tr'):['rx','ry','yx','nyx','xh','yk']); const t={kind:k};
+  const right=ruleOf(t,true);
+  const nm={rx:'the x-axis',ry:'the y-axis',yx:'y = x',nyx:'y = −x',xh:'a vertical line x = h',yk:'a horizontal line y = k'}[k];
+  return {label:'Rules', prompt:`Which rule is a reflection across ${esc(nm)}?`, choices:shuffle([right,...shuffle(ALLRULES.filter(r=>r!==right)).slice(0,3)]), answer:right, mono:true};
+}
+function mcWhich(kinds){
+  const t=makeT(pick(kinds)); if(t.kind==='cp') return mcImage(kinds); t.words=false; const s=makeShape(3,-5,5,t); if(!s) return mcImage(kinds);
+  const right=describe(t);
+  const others=new Set();
+  const cand=[{kind:'rx'},{kind:'ry'},{kind:'yx'},{kind:'nyx'},{kind:'xh',h:t.h||nz(-3,3)},{kind:'yk',k:t.k||nz(-3,3)},{kind:'xh',h:-(t.h||2)},{kind:'yk',k:-(t.k||2)}];
+  if(t.kind==='tr') cand.push({kind:'tr',a:-t.a,b:-t.b},{kind:'tr',a:t.b,b:t.a},{kind:'tr',a:t.a,b:-t.b});
+  if(t.kind==='dl') [[2,1],[3,1],[1,2],[1,3],[3,4],[4,3]].forEach(([n,d])=>cand.push({kind:'dl',sn:n,sd:d}));
+  if(isRot(t)){ [[90,'cw'],[90,'ccw'],[180,'cw']].forEach(([deg,dir])=>{ cand.push({kind:t.kind,deg,dir,c:t.c}); if(t.kind==='rp') cand.push({kind:'ro',deg,dir,c:[0,0]}); }); }
+  else cand.push({kind:'ro',deg:90,dir:'cw',c:[0,0]},{kind:'ro',deg:90,dir:'ccw',c:[0,0]},{kind:'ro',deg:180,dir:'cw',c:[0,0]});
+  shuffle(cand).forEach(c=>{ const d=describe(c); if(d!==right && !s.pts.every((p,i)=>same(apply(c,p),s.img[i]))) others.add(d); });
+  const list=s.names.map((n,i)=>`<span>${n}${P(s.pts[i])}</span><span class="im">→ ${n}′${P(s.img[i])}</span>`).join('');
+  return {label:'Name the transformation', prompt:`Which transformation maps the figure to its image?<div class="pts" style="margin-top:8px">${list}</div>`,
+    visual:gridSVG({shapes:[{pts:s.pts,names:s.names,cls:'pre'},{pts:s.img,names:s.names,cls:'img',prime:true}]}),
+    choices:shuffle([right,...[...others].slice(0,3)]), answer:right, why:`${esc(ruleLine(t))}<br>${s.names.map((n,i)=>work(t,s.pts[i],n)).join('<br>')}`};
+}
+function mcConcept(){ const [q,a,w]=pick(Math.random()<.3?SYMCON:CONCEPTS); return {label:'Concepts', prompt:esc(q), choices:shuffle([a,...w]), answer:a}; }
+const mcF=filterChips('mc-filter',KF,'mcF',()=>MC.start());
+const MC=makeEngine('mc',()=>{ const k=kindsFor(mcF()); const out=[];
+  for(let i=0;i<10;i++){ const r=Math.random(); out.push(r<.45?mcImage(k):r<.7?mcWhich(k):r<.85?mcRule(k):mcConcept()); } return out; });
+
+/* ---------- FIND THE IMAGE ---------- */
+const findF=filterChips('find-filter',KF,'findF',()=>FIND.start());
+const FIND=makeEngine('find',()=>{ const out=[];
+  for(let i=0;i<8;i++){ const t=makeT(pick(kindsFor(findF()))); const n=Math.random()<.35?1:3; const s=makeShape(n,-6,6,t); if(!s){ i--; continue; }
+    out.push({label:'Find the image', prompt:`${esc(describe(t)).replace(/^./,c=>c.toUpperCase())}<div class="pts" style="margin-top:8px">${s.names.map((nm,j)=>`<span>${nm}${P(s.pts[j])}</span>`).join('')}</div>`,
+      inputs:s.names.map((nm,j)=>({label:nm+'′', ph:'(x, y)', show:P(s.img[j]), check:v=>{ const p=parsePt(v); return !!p&&same(p,s.img[j]); }})),
+      why:`${esc(ruleLine(t))}<br>${s.names.map((nm,j)=>work(t,s.pts[j],nm)).join('<br>')}`}); }
+  return out; });
+
+/* ---------- NAME IT ---------- */
+const nameF=filterChips('name-filter',KF,'nameF',()=>NAME.start());
+const NAME=makeEngine('name',()=>{ const out=[];
+  for(let i=0;i<8;i++){ let k=pick(kindsFor(nameF())); if(k==='rp') k='ro'; if(k==='cp') k='tr'; const t=makeT(k); t.words=false; if(t.deg===270) t.deg=90; const s=makeShape(Math.random()<.5?3:4,-6,6,t); if(!s){ i--; continue; }
+    const list=s.names.map((n,j)=>`<span>${n}${P(s.pts[j])}</span><span class="im">→ ${n}′${P(s.img[j])}</span>`).join('');
+    if(t.kind==='dl'){ const list=s.names.map((n,j)=>`<span>${n}${P(s.pts[j])}</span><span class="im">→ ${n}′${P(s.img[j])}</span>`).join('');
+      out.push({label:'Name it', prompt:`What is the scale factor k? <span class="tip">Type it like 2, 1/2, or 0.75</span><div class="pts" style="margin-top:8px">${list}</div>`, visual:gridSVG({shapes:[{pts:s.pts,names:s.names,cls:'pre'},{pts:s.img,names:s.names,cls:'img',prime:true}],mirror:t}),
+        inputs:[{label:'k', ph:'k', show:FR(t), check:v=>{ const x=parseNum(v); return x!==null&&Math.abs(x-kval(t))<1e-6; }}], why:`k = image ÷ original. Example: ${s.names[0]}′ ÷ ${s.names[0]} → ${P(s.img[0])} ÷ ${P(s.pts[0])} = ${FR(t)}. ${kval(t)>1?'Bigger, so k > 1.':'Smaller, so k < 1.'}`}); continue; }
+    const ans=t.kind==='tr'?V(t.a,t.b):isRot(t)?describe(t).replace('rotation ','').replace(' about the origin',''):describe(t).replace('reflection across ','');
+    out.push({label:'Name it', prompt:`${t.kind==='tr'?'Write the translation vector.':isRot(t)?'Describe the rotation about the origin.':'Which line is this a reflection across?'} <span class="tip">${t.kind==='tr'?'Type it like ⟨3, 1⟩ or 3, 1':isRot(t)?'Type it like 90 cw, 90 ccw, or 180':'Type it like y = x, x = −2, or x-axis'}</span><div class="pts" style="margin-top:8px">${list}</div>`,
+      visual:gridSVG({shapes:[{pts:s.pts,names:s.names,cls:'pre'},{pts:s.img,names:s.names,cls:'img',prime:true}]}),
+      inputs:[{label:t.kind==='tr'?'⟨ ⟩':isRot(t)?'turn':'line', ph:t.kind==='tr'?'⟨a, b⟩':isRot(t)?'90 cw':'y = x', show:ans, check:v=>{ const u=parseNamed(v); return !!u&&cat(u)===cat(t)&&s.pts.every((p,j)=>same(apply(u,p),s.img[j])); }}],
+      why:`Answer: ${esc(ans)}<br>${esc(ruleLine(t))}<br>${s.names.map((n,j)=>work(t,s.pts[j],n)).join('<br>')}`}); }
+  return out; });
+
+/* ---------- RULES (typed) ---------- */
+const RULECARDS=[
+ ['Reflection over the x-axis',(x,y)=>[x,-y],'(x, −y)'],
+ ['Reflection over the y-axis',(x,y)=>[-x,y],'(−x, y)'],
+ ['Reflection over y = x',(x,y)=>[y,x],'(y, x)'],
+ ['Reflection over y = −x',(x,y)=>[-y,-x],'(−y, −x)'],
+ ['Reflection over the vertical line x = h',(x,y,h)=>[2*h-x,y],'(2h − x, y)'],
+ ['Reflection over the horizontal line y = k',(x,y,h,k)=>[x,2*k-y],'(x, 2k − y)'],
+ ['Translation by the vector ⟨a, b⟩',(x,y,h,k,a,b)=>[x+a,y+b],'(x + a, y + b)'],
+ ['Translation 3 units left and 2 units up',(x,y)=>[x-3,y+2],'(x − 3, y + 2)'],
+ ['Translation 4 units right and 5 units down',(x,y)=>[x+4,y-5],'(x + 4, y − 5)'],
+ ['Reflection over x = 3',(x,y)=>[6-x,y],'(6 − x, y)'],
+ ['Reflection over y = −2',(x,y)=>[x,-4-y],'(x, −4 − y)'],
+ ['Rotation 90\u00b0 clockwise about the origin',(x,y)=>[y,-x],'(y, \u2212x)'],
+ ['Rotation 90\u00b0 counterclockwise about the origin',(x,y)=>[-y,x],'(\u2212y, x)'],
+ ['Rotation 180\u00b0 about the origin',(x,y)=>[-x,-y],'(\u2212x, \u2212y)'],
+ ['Rotation 270\u00b0 counterclockwise about the origin',(x,y)=>[y,-x],'(y, \u2212x)'],
+ ['Rotation 270\u00b0 clockwise about the origin',(x,y)=>[-y,x],'(\u2212y, x)'],
+ ['Rotation 180\u00b0 about the point (h, k)',(x,y,h,k)=>[2*h-x,2*k-y],'(2h \u2212 x, 2k \u2212 y)'],
+ ['Dilation by scale factor k (center at the origin)',(x,y,h,k)=>[k*x,k*y],'(kx, ky)'],
+ ['Dilation by scale factor 3',(x,y)=>[3*x,3*y],'(3x, 3y)'],
+ ['Dilation by scale factor 1/2',(x,y)=>[x/2,y/2],'(x/2, y/2)'],
+];
+const WORDCARDS=[
+ ['A reflection is a ___.',['flip','a flip']],
+ ['A translation is a ___.',['slide','a slide']],
+ ['A rotation is a ___.',['turn','a turn']],
+ ['Magnitude of rotational symmetry = 360\u00b0 \u00f7 ___.',['order','the order']],
+ ['A figure with ___ symmetry looks the same after a 180\u00b0 turn.',['point']],
+ ['A dilation with k > 1 is called an ___.',['enlargement']],
+ ['A dilation with 0 < k < 1 is called a ___.',['reduction']],
+ ['In a reflection, the figure and its image have ___ orientations.',['opposite']],
+ ['An isometry keeps the ___ and ___ of a figure the same.',['size and shape','shape and size']],
+ ['Write "2 units left and 3 units up" as a vector.',null,[-2,3]],
+ ['Write "1 unit right and 2 units down" as a vector.',null,[1,-2]],
+];
+const RULES=makeEngine('rules',()=>shuffle([
+  ...RULECARDS.map(([q,f,show])=>({label:'Rule recall', prompt:`${esc(q)}<div class="rule-big" style="margin-top:6px">(x, y) → ( ? )</div>`,
+    inputs:[{label:'→', ph:'like y, x  or  2h - x, y', show, check:v=>ruleMatches(v,f)}], why:`(x, y) → ${esc(show)}`})),
+  ...WORDCARDS.map(([q,ans,vec])=>({label:'Rule recall', prompt:esc(q),
+    inputs:[{label:'→', ph:'Type your answer', show:vec?V(vec[0],vec[1]):ans[0], check:v=>vec?(()=>{const p=parsePt(v);return !!p&&same(p,vec);})():ans.includes(v.toLowerCase().trim().replace(/[.]/g,''))}]}))
+]),{fixed:true});
+
+/* ---------- GRAPH IT (interactive) ---------- */
+const graphF=filterChips('graph-filter',KF,'graphF',()=>newGraph());
+const G={q:null,placed:[],state:'ask',right:0,total:0};
+function newGraph(retry){
+  if(retry&&G.q){ G.q.retry=true; } else {
+    let s,t; do{ t=makeT(pick(kindsFor(graphF()))); s=makeShape(3,-6,6,t); }while(!s);
+    G.q={t,s};
+  }
+  G.placed=[]; G.state='ask'; renderGraph();
+}
+function renderGraph(){
+  const {t,s}=G.q, el=$('#graph-card'), done=G.state!=='ask';
+  $('#graph-count').textContent=`${G.right} / ${G.total} correct`;
+  const shapes=[{pts:s.pts,names:s.names,cls:'pre'}];
+  if(done) shapes.push({pts:s.img,names:s.names,cls:'ans',dot:'okD',prime:true});
+  let extra='';
+  if(G.placed.length){
+    if(G.placed.length>=2) extra+=`<polygon class="img" points="${G.placed.map(p=>`${p[0]},${-p[1]}`).join(' ')}" ${G.placed.length<3?'style="fill:none"':''}/>`;
+    G.placed.forEach((p,i)=>{ const ok=same(p,s.img[i]); extra+=`<circle class="${done?(ok?'okD':'noD'):'imgD'}" cx="${p[0]}" cy="${-p[1]}" r="0.2"/>${done?'':`<text class="lab i" x="${p[0]+0.22}" y="${-p[1]-0.24}">${s.names[i]}′</text>`}`; });
+  }
+  extra+='<circle class="ghost" id="ghost" r="0.2" cx="-99" cy="-99"/>';
+  const mirror=(t.kind!=='tr'&&t.kind!=='cp')?t:null; // reflection line or rotation center
+  const nextName=G.placed.length<3?s.names[G.placed.length]+'′':null;
+  const fb=!done?'':(()=>{ const ok=G.state==='right';
+    return `<div class="fb ${ok?'ok':'no'}"><strong>${ok?'Correct. All three points are in the right place.':'Not quite. The dashed green shape is the correct image.'}</strong><div class="work">${esc(ruleLine(t))}<br>${s.names.map((n,i)=>work(t,s.pts[i],n)+(G.placed[i]&&!same(G.placed[i],s.img[i])?` <span style="color:var(--bad)">(you put ${P(G.placed[i])})</span>`:'')).join('<br>')}</div></div>`; })();
+  el.innerHTML=`<div class="card"><p class="label">Graph the image${G.q.retry?' · try again':''}</p>
+    <div class="prompt">${esc(describe(t)).replace(/^./,c=>c.toUpperCase())}<div class="pts" style="margin-top:8px">${s.names.map((n,i)=>`<span>${n}${P(s.pts[i])}</span>`).join('')}</div></div>
+    ${gridSVG({shapes,mirror,id:'gsvg',click:!done,extra})}
+    <div class="placed">${s.names.map((n,i)=>`<span class="${!done&&i===G.placed.length?'next':''}">${n}′ ${G.placed[i]?P(G.placed[i]):'tap the grid'}</span>`).join('')}</div>
+    ${fb}
+    <div class="row">${done?'<button class="btn primary" id="g-next">Next</button>':`<button class="btn primary" id="g-check" ${G.placed.length<3?'disabled':''}>Check</button><button class="btn" id="g-undo" ${G.placed.length?'':'disabled'}>Undo</button><button class="btn ghost" id="g-show">Show me</button>`}${!done&&nextName?`<span class="kbd">Tap where ${nextName} goes</span>`:''}</div></div>`;
+  const svg=$('#gsvg');
+  if(!done){
+    const toPt=e=>{ const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const p=pt.matrixTransform(svg.getScreenCTM().inverse()); return [Math.max(-8,Math.min(8,Math.round(p.x))),Math.max(-8,Math.min(8,Math.round(-p.y)))]; };
+    svg.addEventListener('pointermove',e=>{ if(G.placed.length>=3) return; const p=toPt(e), gh=$('#ghost'); gh.setAttribute('cx',p[0]); gh.setAttribute('cy',-p[1]); });
+    svg.addEventListener('pointerleave',()=>{ const gh=$('#ghost'); gh.setAttribute('cx',-99); });
+    svg.addEventListener('click',e=>{ if(G.placed.length>=3) return; G.placed.push(toPt(e)); renderGraph(); });
+    $('#g-undo').onclick=()=>{ G.placed.pop(); renderGraph(); };
+    $('#g-check').onclick=()=>{ const ok=G.placed.every((p,i)=>same(p,s.img[i])); G.total++; if(ok) G.right++; score(ok); G.state=ok?'right':'wrong'; renderGraph(); };
+    $('#g-show').onclick=()=>{ G.total++; score(false); G.state='wrong'; renderGraph(); };
+  } else { const b=$('#g-next'); b.onclick=()=>newGraph(G.state==='wrong'&&!G.q.retry); b.focus(); }
+}
+
+/* ---------- SYMMETRY ---------- */
+const reg=(n,r,rot)=>Array.from({length:n},(_,i)=>{const a=(rot+360*i/n)*Math.PI/180;return [r*Math.cos(a),r*Math.sin(a)];});
+const rotPts=(pts,deg)=>pts.map(([x,y])=>{const a=deg*Math.PI/180;return [x*Math.cos(a)-y*Math.sin(a),x*Math.sin(a)+y*Math.cos(a)];});
+const poly=pts=>`<polygon class="shp" points="${pts.map(p=>p.map(v=>v.toFixed(2)).join(',')).join(' ')}"/>`;
+const SHAPES=[
+ {n:'Equilateral triangle',L:3,O:3,svg:poly(reg(3,9,-90)),lw:'one through each vertex'},
+ {n:'Square',L:4,O:4,svg:poly(reg(4,9,-45)),lw:'2 diagonals + 2 through the midpoints of the sides'},
+ {n:'Rectangle',L:2,O:2,svg:poly([[-8.5,-5],[8.5,-5],[8.5,5],[-8.5,5]]),lw:'one vertical, one horizontal (NOT the diagonals)'},
+ {n:'Rhombus',L:2,O:2,svg:poly([[0,-8.5],[5.5,0],[0,8.5],[-5.5,0]]),lw:'the 2 diagonals'},
+ {n:'Parallelogram',L:0,O:2,svg:poly([[-8.5,4.5],[3.5,4.5],[8.5,-4.5],[-3.5,-4.5]]),lw:''},
+ {n:'Kite',L:1,O:1,svg:poly([[0,-8.5],[5.5,-3],[0,8.5],[-5.5,-3]]),lw:'the one diagonal that goes through the top and bottom'},
+ {n:'Isosceles trapezoid',L:1,O:1,svg:poly([[-4,-5],[4,-5],[8.5,5],[-8.5,5]]),lw:'one vertical line down the middle'},
+ {n:'Isosceles triangle',L:1,O:1,svg:poly([[0,-8.5],[5.5,7.5],[-5.5,7.5]]),lw:'one vertical line down the middle'},
+ {n:'Scalene triangle',L:0,O:1,svg:poly([[-7.5,6.5],[8.5,4],[-2,-7.5]]),lw:''},
+ {n:'Regular pentagon',L:5,O:5,svg:poly(reg(5,9,-90)),lw:'one through each vertex'},
+ {n:'Regular hexagon',L:6,O:6,svg:poly(reg(6,9,0)),lw:'3 through opposite vertices + 3 through opposite sides'},
+ {n:'Regular octagon',L:8,O:8,svg:poly(reg(8,9,-22.5)),lw:'4 through opposite vertices + 4 through opposite sides'},
+ {n:'Letter Z',L:0,O:2,svg:poly([[-7,-8],[7,-8],[7,-5],[-2.5,5],[7,5],[7,8],[-7,8],[-7,5],[2.5,-5],[-7,-5]]),lw:''},
+ {n:'Letter H',L:2,O:2,svg:poly([[-7,-8],[-3,-8],[-3,-1.5],[3,-1.5],[3,-8],[7,-8],[7,8],[3,8],[3,1.5],[-3,1.5],[-3,8],[-7,8]]),lw:'one vertical, one horizontal'},
+ {n:'Letter N',L:0,O:2,svg:poly([[-7,8],[-7,-8],[-3,-8],[3,2],[3,-8],[7,-8],[7,8],[3,8],[-3,-2],[-3,8]]),lw:''},
+ {n:'Letter T',L:1,O:1,svg:poly([[-7.5,-8],[7.5,-8],[7.5,-4],[2,-4],[2,8.5],[-2,8.5],[-2,-4],[-7.5,-4]]),lw:'one vertical line down the middle'},
+ {n:'Letter E',L:1,O:1,svg:poly([[-6,-8],[6,-8],[6,-5],[-2,-5],[-2,-1.5],[4,-1.5],[4,1.5],[-2,1.5],[-2,5],[6,5],[6,8],[-6,8]]),lw:'one horizontal line through the middle'},
+ {n:'Plus sign',L:4,O:4,svg:poly([[-2,-8.5],[2,-8.5],[2,-2],[8.5,-2],[8.5,2],[2,2],[2,8.5],[-2,8.5],[-2,2],[-8.5,2],[-8.5,-2],[-2,-2]]),lw:'vertical, horizontal, and both diagonals'},
+ {n:'3-blade pinwheel',L:0,O:3,svg:[0,120,240].map(d=>poly(rotPts([[0,0],[9,0],[6.5,4.2]],d))).join(''),lw:''},
+ {n:'4-blade pinwheel',L:0,O:4,svg:[0,90,180,270].map(d=>poly(rotPts([[0,0],[8.8,0],[6,4]],d))).join(''),lw:''},
+ {n:'5-point star',L:5,O:5,svg:poly(Array.from({length:10},(_,i)=>{const a=(-90+36*i)*Math.PI/180,r=i%2?3.8:9.2;return [r*Math.cos(a),r*Math.sin(a)];})),lw:'one through each point'},
+ {n:'Hourglass',L:2,O:2,svg:'<path class="shp" d="M-6,-8.5 H6 Q1.2,-2 1.2,0 Q1.2,2 6,8.5 H-6 Q-1.2,2 -1.2,0 Q-1.2,-2 -6,-8.5 Z"/>',lw:'one vertical, one horizontal'},
+ {n:'Four-leaf shape',L:4,O:4,svg:[[0,-4.3],[4.3,0],[0,4.3],[-4.3,0]].map(([x,y])=>`<circle class="shp" cx="${x}" cy="${y}" r="4.4"/>`).join('')+'<circle cx="0" cy="0" r="3.2" style="fill:var(--img-soft);stroke:none"/>',lw:'vertical, horizontal, and both diagonals'},
+];
+const symBox=sh=>`<div class="symbox"><svg viewBox="-10.5 -10.5 21 21" role="img" aria-label="${esc(sh.n)}">${sh.svg}</svg></div>`;
+const ptSym=sh=>sh.O%2===0;
+function symWhy(sh){ const o=sh.O;
+  return `${esc(sh.n)}: ${sh.L} line${sh.L===1?'':'s'} of symmetry${sh.lw?' ('+esc(sh.lw)+')':''}. `+
+    (o===1?'It only matches itself after a full 360° turn, so it has <b>no rotational symmetry</b> and no point symmetry.':
+    `It matches itself ${o} times in a full turn: order ${o}, magnitude 360° ÷ ${o} = ${360/o}°. `+(ptSym(sh)?'The order is even, so a 180° turn works: <b>it has point symmetry</b>.':'The order is odd, so 180° doesn’t work: <b>no point symmetry</b>.')); }
+const isNo=v=>/^(no|none|n\/a|na|-|0|nope)$/i.test(String(v).trim());
+const isYes=v=>/^(yes|y|yeah|yep)$/i.test(String(v).trim());
+const numOf=v=>{ const m=String(v).match(/-?\d+(\.\d+)?/); return m?+m[0]:null; };
+function symRow(){ const sh=pick(SHAPES), o=sh.O;
+  return {label:'Fill the table row', prompt:`Fill in the symmetry row for this shape. <span class="tip">Type “none” if it has no rotational symmetry.</span>`, visual:symBox(sh),
+    inputs:[
+      {label:'Lines', ph:'number of lines', show:String(sh.L), check:v=>sh.L===0?(isNo(v)||numOf(v)===0):numOf(v)===sh.L},
+      {label:'Order', ph:'order or none', show:o===1?'none (order 1)':String(o), check:v=>o===1?(isNo(v)||numOf(v)===1):numOf(v)===o},
+      {label:'Angle', ph:'magnitude in °', show:o===1?'none':360/o+'°', check:v=>o===1?(isNo(v)||numOf(v)===360):numOf(v)===360/o},
+      {label:'Point', ph:'yes or no', show:ptSym(sh)?'yes':'no', check:v=>ptSym(sh)?isYes(v):/^(no|n|nope)$/i.test(String(v).trim())}],
+    why:symWhy(sh)}; }
+function symLines(){ const sh=pick(SHAPES); const right=String(sh.L); const opts=new Set([right]); for(const c of ['0','1','2','3','4','5','6','8']){ if(opts.size>=4) break; if(Math.random()<.6) opts.add(c); } ['0','1','2','4'].forEach(c=>{ if(opts.size<4) opts.add(c); });
+  return {label:'Lines of symmetry', prompt:'How many lines of symmetry does this shape have?', visual:symBox(sh), choices:shuffle([...opts].slice(0,4)), answer:right, why:symWhy(sh)}; }
+function symRot(){ const sh=pick(SHAPES), o=sh.O; const right=o===1?'No rotational symmetry':`Order ${o}, magnitude ${360/o}°`;
+  const pool=['No rotational symmetry','Order 2, magnitude 180°','Order 3, magnitude 120°','Order 4, magnitude 90°','Order 5, magnitude 72°','Order 6, magnitude 60°','Order 8, magnitude 45°','Order 2, magnitude 90°','Order 4, magnitude 45°'].filter(x=>x!==right);
+  return {label:'Rotational symmetry', prompt:'Describe this shape’s rotational symmetry.', visual:symBox(sh), choices:shuffle([right,...shuffle(pool).slice(0,3)]), answer:right, why:symWhy(sh)}; }
+function symPoint(){ const sh=pick(SHAPES); const right=ptSym(sh)?'Yes':'No';
+  return {label:'Point symmetry', prompt:'Does this shape have point symmetry?', visual:symBox(sh), choices:['Yes','No'], answer:right, why:symWhy(sh)}; }
+function symDef(){ const [q,a,w]=pick(SYMCON); return {label:'Definitions', prompt:esc(q), choices:shuffle([a,...w]), answer:a}; }
+function symCalc(){ const r=Math.random();
+  if(r<.5){ const o=pick([2,3,4,5,6,8,9,10,12]); return {label:'Order & magnitude', prompt:`A shape has rotational symmetry of order ${o}. What is its magnitude?`, inputs:[{label:'°', ph:'degrees', show:360/o+'°', check:v=>numOf(v)===360/o}], why:`360° ÷ ${o} = ${360/o}°`}; }
+  const o=pick([2,3,4,5,6,8,9,10,12]); return {label:'Order & magnitude', prompt:`A shape has a magnitude of ${360/o}°. What is its order?`, inputs:[{label:'order', ph:'order', show:String(o), check:v=>numOf(v)===o}], why:`360° ÷ ${360/o}° = ${o}`}; }
+const SYMDEFS=[
+ ['Symmetry','A figure has symmetry if a reflection or rotation maps it exactly onto itself.'],
+ ['Line symmetry (reflectional symmetry)','A line can be drawn so that each half is a mirror image of the other. If you fold the figure on that line, the halves match up exactly.'],
+ ['Line of symmetry','The mirror line that splits a figure into two matching halves. A figure can have 0, 1, several, or (for a circle) infinitely many.'],
+ ['Rotational symmetry','The figure looks exactly the same after a rotation of less than 360° about its center.'],
+ ['Center of symmetry','The point the figure is turned around, usually its center.'],
+ ['Order of symmetry','The number of times the figure maps onto itself during one full 360° turn. Order 1 means it only matches at 360°, so it has NO rotational symmetry.'],
+ ['Magnitude (angle) of symmetry','The smallest angle you can turn the figure so it maps onto itself. Magnitude = 360° ÷ order.'],
+ ['Point symmetry','The figure looks the same after a 180° turn (upside down). Every point has a matching point the same distance from the center on the opposite side. Any shape with an even order has point symmetry.'],
+ ['Regular polygon shortcut','A regular polygon with n sides has n lines of symmetry, order n, and magnitude 360° ÷ n. It has point symmetry only if n is even.'],
+ ['Circle','Infinitely many lines of symmetry, and it matches itself at every angle.'],
+];
+$('#sym-defs').innerHTML=SYMDEFS.map(([a,b])=>`<div class="rl"><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('');
+const symF=filterChips('sym-filter',{mix:'Mixed',row:'Fill the table',lines:'Lines',rot:'Rotational',point:'Point',defs:'Definitions'},'symF',()=>SYM.start());
+const SYM=makeEngine('sym',()=>{ const f=symF(), G={row:symRow,lines:symLines,rot:symRot,point:symPoint,defs:symDef,calc:symCalc};
+  const keys=f==='mix'?['row','row','lines','rot','point','defs','calc']:f==='rot'?['rot','rot','calc']:[f];
+  return Array.from({length:10},()=>G[pick(keys)]()); });
+
+/* ---------- tabs + boot ---------- */
+const TABS=['mc','find','graph','name','sym','rules'];
+function showTab(t){ TABS.forEach(x=>{ $('#pane-'+x).hidden=x!==t; $('#tab-'+x).setAttribute('aria-selected',x===t); }); store.set('tab',t);
+  const inp=document.querySelector('#pane-'+t+' input[type=text]:not([readonly])'); if(inp) inp.focus(); }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.addEventListener('keydown',e=>{ if(e.target.matches('input')) return; if(!$('#pane-mc').hidden) MC.key(e); if(!$('#pane-sym').hidden) SYM.key(e);
+  if(e.key==='Enter'&&!$('#pane-graph').hidden&&$('#g-next')&&document.activeElement!==$('#g-next')){ e.preventDefault(); $('#g-next').click(); } });
+MC.start(); FIND.start(); NAME.start(); RULES.start(); SYM.start(); newGraph();
+const t0=store.get('tab','mc'); showTab(TABS.includes(t0)?t0:'mc');
+</script>
+
+</body></html>
